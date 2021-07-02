@@ -5,21 +5,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.google.gson.Gson;
-import com.wenance.challenge.commons.models.BTCInfoRequest;
-import com.wenance.challenge.commons.models.BTCInfoResponse;
+import com.wenance.challenge.models.BTCInfoRequest;
+import com.wenance.challenge.models.BTCInfoResponse;
+import com.wenance.challenge.utils.DateUtil;
 
 @Service
 public class BTCService {
@@ -40,9 +36,11 @@ public class BTCService {
 			        con.connect();
 			        BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
 			        BTCInfoRequest info = gson.fromJson(reader.readLine(), BTCInfoRequest.class);
-			        Date now = new Date();			     
-			        info.setDate(now);
-			        System.out.println(now);
+			        Date now = new Date();			
+			        Date times = DateUtil.getDateWhitoutMilliseconds(now);
+			        info.setDate(times);
+			        
+			        System.out.println(times);
 			        BTCData.addInfo(info);
 			        
 				} catch (IOException e) {
@@ -54,10 +52,13 @@ public class BTCService {
 	}
 
 	public String getPriceByDate(Date time) {
-		return getDataByDate(time).getLprice();
+		Date timesWM = DateUtil.getDateWhitoutMilliseconds(time);
+		return getDataByDate(timesWM).getLprice();
 	}
 	public BTCInfoResponse getInfoBTCBetweenDates(Date from, Date to) {
-		List<BTCInfoRequest> results=getDataBetweenDates(from,to);
+		Date fromWM = DateUtil.getDateWhitoutMilliseconds(from);
+		Date toWM = DateUtil.getDateWhitoutMilliseconds(to);
+		List<BTCInfoRequest> results=getDataBetweenDates(fromWM,toWM);
 		double average = getAverageByBTCList(results);
 		double percent = getPercentBetweenAverageAndMax(getMaxPrice(), average);
 		return new BTCInfoResponse(average, percent);
@@ -88,8 +89,9 @@ public class BTCService {
 		return max;
 	}
 	private BTCInfoRequest getDataByDate(Date time) {
-		//RETORNA LA INFO MAS CERCANA AL HORARIO INGRESADO REDONDEADO PARA ARRIBA
-		BTCInfoRequest result = BTCData.getData().stream().filter(i->i.getDate().compareTo(time) >0).findAny().get();
-	return result;
+		BTCInfoRequest result = BTCData.getData().stream().filter(i->i.getDate().compareTo(time) ==0).findAny().get();
+		return result;
+
+	}
 }
-}
+

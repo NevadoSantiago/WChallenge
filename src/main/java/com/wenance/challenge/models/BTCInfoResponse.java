@@ -1,4 +1,4 @@
-package com.wenance.challenge.commons.models;
+package com.wenance.challenge.models;
 
 public class BTCInfoResponse {
 
